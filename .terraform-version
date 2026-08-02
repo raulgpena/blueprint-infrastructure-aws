@@ -1,0 +1,5 @@
+# name: Raul Pena (raul.pena@gmail.com)
+# createAt: 2026-08-02T17:53:34-0300
+# Description: Terraform CLI version expected for this infrastructure project.
+
+1.5.7

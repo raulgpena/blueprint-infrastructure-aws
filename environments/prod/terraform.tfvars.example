@@ -1,0 +1,15 @@
+# name: Raul Pena (raul.pena@gmail.com)
+# createAt: 2026-08-02T17:53:34-0300
+# Description: Example Terraform variable values for the prod environment.
+
+aws_region          = "us-east-1"
+project             = "blueprint"
+environment         = "prod"
+owner               = "platform"
+cost_center         = "platform"
+data_classification = "confidential"
+vpc_cidr            = "10.30.0.0/16"
+az_count            = 3
+enable_nat_gateway  = true
+single_nat_gateway  = false
+enable_s3_endpoint  = true

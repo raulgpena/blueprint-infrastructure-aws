@@ -1,0 +1,18 @@
+# name: Raul Pena (raul.pena@gmail.com)
+# createAt: 2026-08-02T17:53:34-0300
+# Description: Git ignore rules for Terraform state, plans, local variables, and generated cache files.
+
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+terraform.tfvars
+*.auto.tfvars
+*.auto.tfvars.json
+.DS_Store

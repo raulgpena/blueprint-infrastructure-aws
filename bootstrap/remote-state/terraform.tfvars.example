@@ -1,0 +1,11 @@
+# name: Raul Pena (raul.pena@gmail.com)
+# createAt: 2026-08-02T17:53:34-0300
+# Description: Example input values for bootstrapping the Terraform remote state backend.
+
+aws_region        = "us-east-1"
+project           = "blueprint"
+environment       = "shared"
+owner             = "platform"
+cost_center       = "platform"
+state_bucket_name = "replace-with-globally-unique-terraform-state-bucket"
+lock_table_name   = "blueprint-shared-terraform-locks"

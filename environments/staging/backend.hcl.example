@@ -1,0 +1,9 @@
+# name: Raul Pena (raul.pena@gmail.com)
+# createAt: 2026-08-02T17:53:34-0300
+# Description: Example S3 backend configuration for the staging environment Terraform state.
+
+bucket         = "replace-with-staging-terraform-state-bucket"
+key            = "blueprint/staging/terraform.tfstate"
+region         = "us-east-1"
+dynamodb_table = "replace-with-staging-terraform-locks-table"
+encrypt        = true

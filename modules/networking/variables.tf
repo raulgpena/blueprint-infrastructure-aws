@@ -51,8 +51,3 @@ variable "enable_s3_endpoint" {
   type        = bool
   default     = true
 }
-
-variable "tags" {
-  description = "Tags applied to resources."
-  type        = map(string)
-}

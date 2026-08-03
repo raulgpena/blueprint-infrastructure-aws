@@ -19,7 +19,6 @@ bootstrap/
   remote-state/       # Creates the S3 backend foundation
 modules/
   networking/         # VPC, subnets, routing, optional NAT and S3 endpoint
-  tags/               # Required common tags and name prefix
 environments/
   dev/
     backend.local.hcl  # S3 backend configuration for dev state
@@ -32,6 +31,8 @@ environments/
 
 - Keep environment roots small and explicit.
 - Put shared infrastructure behavior in reusable modules.
+- Keep simple computed values, such as tags and name prefixes, in environment locals.
+- Apply standard AWS tags through provider `default_tags`; modules should only set resource-specific tags such as `Name`.
 - Use separate Terraform state per environment.
 - Encrypt state and AWS resources by default where supported.
 - Prefer private subnets for workloads.

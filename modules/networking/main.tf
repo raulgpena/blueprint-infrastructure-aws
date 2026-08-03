@@ -7,17 +7,17 @@ resource "aws_vpc" "this" {
   enable_dns_hostnames = true
   enable_dns_support   = true
 
-  tags = merge(var.tags, {
+  tags = {
     Name = "${var.name_prefix}-vpc"
-  })
+  }
 }
 
 resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
 
-  tags = merge(var.tags, {
+  tags = {
     Name = "${var.name_prefix}-igw"
-  })
+  }
 }
 
 resource "aws_subnet" "public" {
@@ -28,10 +28,10 @@ resource "aws_subnet" "public" {
   cidr_block              = cidrsubnet(var.vpc_cidr, var.public_subnet_newbits, each.value.index)
   map_public_ip_on_launch = false
 
-  tags = merge(var.tags, {
+  tags = {
     Name = "${var.name_prefix}-public-${each.key}"
     tier = "public"
-  })
+  }
 }
 
 resource "aws_subnet" "private" {
@@ -41,10 +41,10 @@ resource "aws_subnet" "private" {
   availability_zone = each.key
   cidr_block        = cidrsubnet(var.vpc_cidr, var.private_subnet_newbits, each.value.index + length(var.availability_zones))
 
-  tags = merge(var.tags, {
+  tags = {
     Name = "${var.name_prefix}-private-${each.key}"
     tier = "private"
-  })
+  }
 }
 
 resource "aws_route_table" "public" {
@@ -55,10 +55,10 @@ resource "aws_route_table" "public" {
     gateway_id = aws_internet_gateway.this.id
   }
 
-  tags = merge(var.tags, {
+  tags = {
     Name = "${var.name_prefix}-public"
     tier = "public"
-  })
+  }
 }
 
 resource "aws_route_table_association" "public" {
@@ -73,9 +73,9 @@ resource "aws_eip" "nat" {
 
   domain = "vpc"
 
-  tags = merge(var.tags, {
+  tags = {
     Name = "${var.name_prefix}-nat-${each.key}"
-  })
+  }
 }
 
 resource "aws_nat_gateway" "this" {
@@ -84,9 +84,9 @@ resource "aws_nat_gateway" "this" {
   allocation_id = aws_eip.nat[each.key].id
   subnet_id     = aws_subnet.public[each.key].id
 
-  tags = merge(var.tags, {
+  tags = {
     Name = "${var.name_prefix}-nat-${each.key}"
-  })
+  }
 
   depends_on = [aws_internet_gateway.this]
 }
@@ -105,10 +105,10 @@ resource "aws_route_table" "private" {
     }
   }
 
-  tags = merge(var.tags, {
+  tags = {
     Name = "${var.name_prefix}-private-${each.key}"
     tier = "private"
-  })
+  }
 }
 
 resource "aws_route_table_association" "private" {
@@ -126,9 +126,9 @@ resource "aws_vpc_endpoint" "s3" {
   vpc_endpoint_type = "Gateway"
   route_table_ids   = concat([aws_route_table.public.id], values(aws_route_table.private)[*].id)
 
-  tags = merge(var.tags, {
+  tags = {
     Name = "${var.name_prefix}-s3-endpoint"
-  })
+  }
 }
 
 data "aws_region" "current" {}

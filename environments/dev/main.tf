@@ -1,11 +1,13 @@
 # name: Raul Pena (raul.pena@gmail.com)
 # createAt: 2026-08-02T17:53:34-0300
-# Description: Dev environment composition using shared tags, networking, and KMS modules.
+# Description: Dev environment composition using shared tags and networking modules.
 
+# Fetch the list of active AWS Availability Zones in the region to distribute subnets.
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
+# Generate consistent resource tags and a unified name prefix based on project variables.
 module "tags" {
   source = "../../modules/tags"
 
@@ -17,6 +19,7 @@ module "tags" {
   additional_tags     = var.additional_tags
 }
 
+# Build the foundational VPC network, creating public/private subnets across the availability zones.
 module "networking" {
   source = "../../modules/networking"
 
@@ -27,12 +30,4 @@ module "networking" {
   single_nat_gateway = var.single_nat_gateway
   enable_s3_endpoint = var.enable_s3_endpoint
   tags               = module.tags.tags
-}
-
-module "workload_kms" {
-  source = "../../modules/kms"
-
-  alias_name  = "${module.tags.name_prefix}-workload"
-  description = "Default workload KMS key for ${module.tags.name_prefix}"
-  tags        = module.tags.tags
 }

@@ -16,8 +16,3 @@ output "public_subnet_ids" {
   description = "Public subnet IDs by Availability Zone."
   value       = module.networking.public_subnet_ids
 }
-
-output "workload_kms_key_arn" {
-  description = "Default workload KMS key ARN."
-  value       = module.workload_kms.key_arn
-}

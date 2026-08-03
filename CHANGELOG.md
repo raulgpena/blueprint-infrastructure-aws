@@ -12,11 +12,21 @@ All notable changes to this Terraform infrastructure project are documented in t
 
 - Created the initial AWS Terraform infrastructure scaffold.
 - Added multi-environment roots for `dev`, `staging`, and `prod`.
-- Added reusable modules for common tags, KMS keys, and VPC networking.
-- Added a remote-state bootstrap stack for encrypted S3 state storage and DynamoDB locking.
+- Added reusable modules for common tags and VPC networking.
+- Added a remote-state bootstrap stack for encrypted S3 state storage.
 - Added example backend and variable files for each environment.
 - Added project documentation, Terraform ignore rules, and Terraform CLI version metadata.
 - Added standard file headers with owner, creation timestamp, and file descriptions.
+
+### Changed
+
+- Changed Terraform remote state bucket encryption from SSE-KMS to SSE-S3 (`AES256`) to avoid KMS key and request charges.
+- Changed Terraform backend locking from deprecated DynamoDB-based locking to native S3 lock files with `use_lockfile = true`.
+- Updated Terraform version requirements to `>= 1.10.0, < 2.0.0` for native S3 backend lock file support.
+
+### Removed
+
+- Removed the reusable KMS module and per-environment workload KMS keys to avoid fixed monthly customer-managed KMS key charges.
 
 ### Validation
 

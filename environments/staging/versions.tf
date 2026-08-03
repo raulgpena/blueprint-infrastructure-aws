@@ -3,7 +3,7 @@
 # Description: Terraform backend and provider version constraints for the staging environment root.
 
 terraform {
-  required_version = "~> 1.5.7"
+  required_version = ">= 1.10.0, < 2.0.0"
 
   backend "s3" {}
 

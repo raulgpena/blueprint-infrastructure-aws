@@ -5,5 +5,5 @@
 bucket         = "replace-with-staging-terraform-state-bucket"
 key            = "blueprint/staging/terraform.tfstate"
 region         = "us-east-1"
-dynamodb_table = "replace-with-staging-terraform-locks-table"
 encrypt        = true
+use_lockfile   = true

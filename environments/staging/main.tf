@@ -1,6 +1,6 @@
 # name: Raul Pena (raul.pena@gmail.com)
 # createAt: 2026-08-02T17:53:34-0300
-# Description: Staging environment composition using shared tags, networking, and KMS modules.
+# Description: Staging environment composition using shared tags and networking modules.
 
 data "aws_availability_zones" "available" {
   state = "available"
@@ -27,12 +27,4 @@ module "networking" {
   single_nat_gateway = var.single_nat_gateway
   enable_s3_endpoint = var.enable_s3_endpoint
   tags               = module.tags.tags
-}
-
-module "workload_kms" {
-  source = "../../modules/kms"
-
-  alias_name  = "${module.tags.name_prefix}-workload"
-  description = "Default workload KMS key for ${module.tags.name_prefix}"
-  tags        = module.tags.tags
 }

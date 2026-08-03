@@ -10,9 +10,8 @@ Terraform project scaffold for AWS infrastructure with reusable modules and sepa
 
 ```text
 bootstrap/
-  remote-state/       # Creates the S3/DynamoDB backend foundation
+  remote-state/       # Creates the S3 backend foundation
 modules/
-  kms/                # Customer-managed KMS keys
   networking/         # VPC, subnets, routing, optional NAT and S3 endpoint
   tags/               # Required common tags and name prefix
 environments/
@@ -69,6 +68,12 @@ The project includes `dev`, `staging`, and `prod` roots. Each root composes the 
 Production changes require explicit environment-specific approval, reviewed plans, and controlled execution.
 
 ## Cost Notes
+
+Terraform state uses S3-managed server-side encryption (SSE-S3 / `AES256`) to avoid KMS monthly key and API request charges for backend state storage. Use SSE-KMS instead only when customer-managed key policies, KMS audit events, or stricter key lifecycle controls are required.
+
+Terraform backend locking uses native S3 lock files with `use_lockfile = true`, which requires Terraform `>= 1.10.0`. DynamoDB-based S3 backend locking is deprecated by HashiCorp and is intentionally not used by this project.
+
+The scaffold does not create customer-managed KMS keys by default. Prefer no-extra-cost service-managed encryption options, such as SSE-S3 for S3, unless a workload has compliance or access-control requirements that justify customer-managed KMS keys and their fixed monthly cost.
 
 NAT Gateway is enabled by environment input. A single NAT Gateway is cheaper but has an Availability Zone dependency. One NAT Gateway per AZ improves availability and avoids cross-AZ routing for private egress, but costs more. Development can disable NAT or use a single NAT Gateway depending on workload needs.
 

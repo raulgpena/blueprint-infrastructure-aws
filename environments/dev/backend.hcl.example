@@ -1,9 +1,0 @@
-# name: Raul Pena (raul.pena@gmail.com)
-# createAt: 2026-08-02T17:53:34-0300
-# Description: Example S3 backend configuration for the dev environment Terraform state.
-
-bucket         = "replace-with-dev-terraform-state-bucket"
-key            = "blueprint/dev/terraform.tfstate"
-region         = "us-east-1"
-dynamodb_table = "replace-with-dev-terraform-locks-table"
-encrypt        = true

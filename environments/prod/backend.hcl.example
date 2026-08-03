@@ -5,5 +5,5 @@
 bucket         = "replace-with-prod-terraform-state-bucket"
 key            = "blueprint/prod/terraform.tfstate"
 region         = "us-east-1"
-dynamodb_table = "replace-with-prod-terraform-locks-table"
 encrypt        = true
+use_lockfile   = true

@@ -6,6 +6,12 @@
 
 Terraform project scaffold for AWS infrastructure with reusable modules and separate environment roots.
 
+## Prerequisites
+
+- Terraform `>= 1.10.0, < 2.0.0`
+- AWS CLI configured with credentials for the target account
+- Explicit AWS profile and region verification before planning or applying
+
 ## Layout
 
 ```text
@@ -16,6 +22,8 @@ modules/
   tags/               # Required common tags and name prefix
 environments/
   dev/
+    backend.local.hcl  # S3 backend configuration for dev state
+    terraform.tfvars   # Dev input values
   staging/
   prod/
 ```
@@ -52,20 +60,46 @@ Configure an environment backend from its example:
 
 ```sh
 cd environments/dev
-cp backend.hcl.example backend.hcl
-terraform init -backend-config=backend.hcl
+terraform init -backend-config=backend.local.hcl
 terraform fmt -check
 terraform validate
 terraform plan -var-file=terraform.tfvars
 ```
 
-Do not commit `backend.hcl`, `terraform.tfvars`, plans, state files, credentials, or secrets.
+Prefer saved plans for reviewed execution:
+
+```sh
+terraform plan -var-file=terraform.tfvars -out=tfplan
+terraform apply tfplan
+```
+
+Do not commit plans, state files, credentials, or secrets. Treat `terraform.tfvars` and backend configuration files as environment-specific inputs and review them before use.
 
 ## Environments
 
 The project includes `dev`, `staging`, and `prod` roots. Each root composes the same reusable modules with environment-specific values.
 
 Production changes require explicit environment-specific approval, reviewed plans, and controlled execution.
+
+## Dev VPC
+
+With the current `environments/dev/terraform.tfvars`, the dev environment creates:
+
+- VPC CIDR `10.10.0.0/16`
+- Two Availability Zones in `us-east-1`
+- Two public `/24` subnets:
+  - `10.10.0.0/24`
+  - `10.10.1.0/24`
+- Two private `/24` subnets:
+  - `10.10.2.0/24`
+  - `10.10.3.0/24`
+- One Internet Gateway
+- One public route table with `0.0.0.0/0` routed to the Internet Gateway
+- One private route table per private subnet
+- One S3 Gateway VPC Endpoint attached to public and private route tables
+- No NAT Gateway by default
+
+Public subnets do not auto-assign public IPs on launch. Private subnets do not have general outbound internet access unless NAT Gateway or additional VPC endpoints are enabled.
 
 ## Cost Notes
 

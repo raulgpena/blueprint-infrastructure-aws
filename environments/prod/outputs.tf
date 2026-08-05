@@ -21,3 +21,13 @@ output "public_subnet_ids" {
   description = "Public subnet IDs by Availability Zone."
   value       = module.networking.public_subnet_ids
 }
+
+output "postgresql_endpoint" {
+  description = "Private PostgreSQL RDS endpoint."
+  value       = module.postgresql.db_instance_endpoint
+}
+
+output "postgresql_secret_arn" {
+  description = "Secrets Manager ARN for the RDS-managed PostgreSQL master password."
+  value       = module.postgresql.master_user_secret_arn
+}

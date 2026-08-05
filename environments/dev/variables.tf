@@ -90,3 +90,57 @@ variable "enable_s3_endpoint" {
   type        = bool
   default     = true
 }
+
+variable "rds_database_name" {
+  description = "Initial PostgreSQL database name."
+  type        = string
+  default     = "appdb"
+}
+
+variable "rds_instance_class" {
+  description = "RDS PostgreSQL instance class."
+  type        = string
+  default     = "db.t4g.micro"
+}
+
+variable "rds_allocated_storage" {
+  description = "Initial RDS PostgreSQL storage size in GiB."
+  type        = number
+  default     = 20
+}
+
+variable "rds_max_allocated_storage" {
+  description = "Maximum RDS PostgreSQL storage size in GiB for autoscaling."
+  type        = number
+  default     = 100
+}
+
+variable "rds_multi_az" {
+  description = "Whether RDS PostgreSQL is deployed as Multi-AZ."
+  type        = bool
+  default     = false
+}
+
+variable "rds_backup_retention_period" {
+  description = "Number of days to retain RDS automated backups."
+  type        = number
+  default     = 1
+}
+
+variable "rds_deletion_protection" {
+  description = "Whether RDS deletion protection is enabled."
+  type        = bool
+  default     = false
+}
+
+variable "rds_skip_final_snapshot" {
+  description = "Whether to skip a final RDS snapshot when deleting the DB instance."
+  type        = bool
+  default     = true
+}
+
+variable "rds_performance_insights_enabled" {
+  description = "Whether RDS Performance Insights is enabled."
+  type        = bool
+  default     = false
+}

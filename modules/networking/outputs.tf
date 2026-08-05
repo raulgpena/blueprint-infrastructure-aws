@@ -41,3 +41,8 @@ output "data_route_table_ids" {
   description = "Private data route table IDs by Availability Zone."
   value       = { for az, route_table in aws_route_table.data : az => route_table.id }
 }
+
+output "services_security_group_id" {
+  description = "Security group ID intended for private services workloads."
+  value       = aws_security_group.services.id
+}

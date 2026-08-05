@@ -12,6 +12,25 @@ resource "aws_vpc" "this" {
   }
 }
 
+resource "aws_security_group" "services" {
+  name        = "${var.name_prefix}-services"
+  description = "Security group for private services workloads"
+  vpc_id      = aws_vpc.this.id
+
+  egress {
+    description = "Allow outbound traffic from services workloads"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.name_prefix}-services"
+    tier = "services"
+  }
+}
+
 resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
 

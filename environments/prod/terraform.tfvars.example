@@ -13,3 +13,12 @@ az_count            = 3
 enable_nat_gateway  = true
 single_nat_gateway  = false
 enable_s3_endpoint  = true
+
+rds_instance_class               = "db.t4g.medium"
+rds_allocated_storage            = 50
+rds_max_allocated_storage        = 500
+rds_multi_az                     = true
+rds_backup_retention_period      = 7
+rds_deletion_protection          = true
+rds_skip_final_snapshot          = false
+rds_performance_insights_enabled = true

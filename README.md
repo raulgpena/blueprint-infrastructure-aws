@@ -15,6 +15,7 @@ bootstrap/
   remote-state/       # Creates the S3 backend foundation
 modules/
   networking/         # VPC, public/services/data subnets, routing, optional NAT and S3 endpoint
+  rds-postgresql/     # Private PostgreSQL RDS instance, subnet group, and security group
 environments/
   dev/
     backend.local.hcl  # S3 backend configuration for dev state
@@ -102,6 +103,20 @@ With the current `environments/dev/terraform.tfvars`, the dev environment create
 
 Public subnets do not auto-assign public IPs on launch. Services subnets can optionally use NAT Gateway for outbound internet access. Data subnets do not receive a NAT route and should stay reachable only from controlled private paths.
 
+## PostgreSQL RDS
+
+The project includes a reusable PostgreSQL RDS module. Each environment places PostgreSQL only in the private `data` subnet tier and allows port `5432` only from the private services security group.
+
+Environment defaults:
+
+| Environment | Instance class | Storage | Multi-AZ | Backups | Deletion protection |
+| --- | --- | --- | --- | --- | --- |
+| `dev` | `db.t4g.micro` | 20 GiB gp3 | No | 1 day | No |
+| `staging` | `db.t4g.small` | 30 GiB gp3 | No | 3 days | No |
+| `prod` | `db.t4g.medium` | 50 GiB gp3 | Yes | 7 days | Yes |
+
+RDS is configured with `publicly_accessible = false`, storage encryption enabled, and RDS-managed master password support. This avoids storing the database password in Git or plain Terraform variable files. The managed password is stored in AWS Secrets Manager, which can have a small monthly cost.
+
 ## Cost Notes
 
 Terraform state uses S3-managed server-side encryption (SSE-S3 / `AES256`) to avoid KMS monthly key and API request charges for backend state storage. Use SSE-KMS instead only when customer-managed key policies, KMS audit events, or stricter key lifecycle controls are required.
@@ -109,6 +124,8 @@ Terraform state uses S3-managed server-side encryption (SSE-S3 / `AES256`) to av
 Terraform backend locking uses native S3 lock files with `use_lockfile = true`, which requires Terraform `>= 1.10.0`. DynamoDB-based S3 backend locking is deprecated by HashiCorp and is intentionally not used by this project.
 
 The scaffold does not create customer-managed KMS keys by default. Prefer no-extra-cost service-managed encryption options, such as SSE-S3 for S3, unless a workload has compliance or access-control requirements that justify customer-managed KMS keys and their fixed monthly cost.
+
+RDS cost is driven mainly by the DB instance class, storage size, backup retention, Multi-AZ, and optional observability features. Dev uses a small Single-AZ instance for cost control. Prod enables Multi-AZ and deletion protection for reliability.
 
 NAT Gateway is enabled by environment input. A single NAT Gateway is cheaper but has an Availability Zone dependency. One NAT Gateway per AZ improves availability and avoids cross-AZ routing for private egress, but costs more. Development can disable NAT or use a single NAT Gateway depending on workload needs.
 

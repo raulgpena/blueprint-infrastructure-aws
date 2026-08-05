@@ -20,6 +20,10 @@ modules/
 environments/
   dev/
     backend.local.hcl  # S3 backend configuration for dev state
+    data.tf            # Data sources
+    networking.tf      # VPC module composition
+    postgresql.tf      # PostgreSQL RDS module composition
+    database-access.tf # Dev-only SSM database access helper
     terraform.tfvars   # Dev input values
   staging/
   prod/
@@ -29,6 +33,7 @@ environments/
 
 - Keep environment roots small and explicit.
 - Put shared infrastructure behavior in reusable modules.
+- Split environment composition by resource type instead of concentrating every block in `main.tf`.
 - Keep simple computed values, such as tags and name prefixes, in environment locals.
 - Apply standard AWS tags through provider `default_tags`; modules should only set resource-specific tags such as `Name`.
 - Use separate Terraform state per environment.

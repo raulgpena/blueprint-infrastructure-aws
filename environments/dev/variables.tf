@@ -144,3 +144,21 @@ variable "rds_performance_insights_enabled" {
   type        = bool
   default     = false
 }
+
+variable "enable_database_access_host" {
+  description = "Whether to create a private SSM helper for developer database port forwarding."
+  type        = bool
+  default     = true
+}
+
+variable "database_access_instance_type" {
+  description = "EC2 instance type for the private SSM database access helper."
+  type        = string
+  default     = "t4g.nano"
+}
+
+variable "database_access_root_volume_size" {
+  description = "Root EBS volume size in GiB for the private SSM database access helper."
+  type        = number
+  default     = 8
+}

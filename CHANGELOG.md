@@ -14,6 +14,7 @@ All notable changes to this Terraform infrastructure project are documented in t
 - Added multi-environment roots for `dev`, `staging`, and `prod`.
 - Added a reusable module for VPC networking.
 - Added a reusable private PostgreSQL RDS module with environment-specific dev, staging, and prod defaults.
+- Added a dev-only private SSM database access helper for PostgreSQL port forwarding.
 - Added a remote-state bootstrap stack for encrypted S3 state storage.
 - Added example backend and variable files for each environment.
 - Added project documentation, Terraform ignore rules, and Terraform CLI version metadata.
@@ -27,6 +28,7 @@ All notable changes to this Terraform infrastructure project are documented in t
 - Simplified networking module tagging by relying on provider `default_tags` for standard tags and keeping only resource-specific tags in the module.
 - Split the networking module private tier into separate `services` and `data` subnet tiers with independent route tables.
 - Added a private services security group and restricted PostgreSQL ingress to that security group.
+- Added private SSM interface endpoints for dev database access without public SSH or NAT Gateway.
 
 ### Removed
 

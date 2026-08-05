@@ -38,3 +38,19 @@ module "postgresql" {
   skip_final_snapshot          = var.rds_skip_final_snapshot
   performance_insights_enabled = var.rds_performance_insights_enabled
 }
+
+# Create a private SSM helper for developer port forwarding to private PostgreSQL.
+module "database_access" {
+  count  = var.enable_database_access_host ? 1 : 0
+  source = "../../modules/ssm-port-forward-host"
+
+  name_prefix = local.name_prefix
+  vpc_id      = module.networking.vpc_id
+  subnet_id   = values(module.networking.services_subnet_ids)[0]
+
+  endpoint_subnet_ids                = [values(module.networking.services_subnet_ids)[0]]
+  instance_security_group_ids        = [module.networking.services_security_group_id]
+  endpoint_source_security_group_ids = [module.networking.services_security_group_id]
+  instance_type                      = var.database_access_instance_type
+  root_volume_size                   = var.database_access_root_volume_size
+}

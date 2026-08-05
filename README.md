@@ -16,6 +16,7 @@ bootstrap/
 modules/
   networking/         # VPC, public/services/data subnets, routing, optional NAT and S3 endpoint
   rds-postgresql/     # Private PostgreSQL RDS instance, subnet group, and security group
+  ssm-port-forward-host/ # Private EC2 helper and SSM endpoints for database port forwarding
 environments/
   dev/
     backend.local.hcl  # S3 backend configuration for dev state
@@ -117,6 +118,35 @@ Environment defaults:
 
 RDS is configured with `publicly_accessible = false`, storage encryption enabled, and RDS-managed master password support. This avoids storing the database password in Git or plain Terraform variable files. The managed password is stored in AWS Secrets Manager, which can have a small monthly cost.
 
+## Dev Database Access
+
+Dev includes an optional private SSM helper instance for PostgreSQL port forwarding. It is enabled by `enable_database_access_host = true` in `environments/dev/terraform.tfvars`.
+
+The helper:
+
+- Runs in a private services subnet.
+- Has no public IP address.
+- Uses AWS Systems Manager Session Manager instead of SSH.
+- Uses the services security group, so PostgreSQL allows it on port `5432`.
+- Creates private SSM interface endpoints for `ssm`, `ssmmessages`, and `ec2messages` because dev does not enable NAT Gateway by default.
+
+After applying dev, use the `postgresql_port_forward_command` output to open a tunnel from your laptop:
+
+```sh
+terraform output -raw postgresql_port_forward_command
+```
+
+Run the printed command, then connect your PostgreSQL client to:
+
+```text
+host: localhost
+port: 5432
+database: appdb
+username: appadmin
+```
+
+Retrieve the database password from the `postgresql_secret_arn` output in AWS Secrets Manager. Do not copy the password into Git or Terraform variable files.
+
 ## Cost Notes
 
 Terraform state uses S3-managed server-side encryption (SSE-S3 / `AES256`) to avoid KMS monthly key and API request charges for backend state storage. Use SSE-KMS instead only when customer-managed key policies, KMS audit events, or stricter key lifecycle controls are required.
@@ -126,6 +156,8 @@ Terraform backend locking uses native S3 lock files with `use_lockfile = true`, 
 The scaffold does not create customer-managed KMS keys by default. Prefer no-extra-cost service-managed encryption options, such as SSE-S3 for S3, unless a workload has compliance or access-control requirements that justify customer-managed KMS keys and their fixed monthly cost.
 
 RDS cost is driven mainly by the DB instance class, storage size, backup retention, Multi-AZ, and optional observability features. Dev uses a small Single-AZ instance for cost control. Prod enables Multi-AZ and deletion protection for reliability.
+
+Dev database access adds one small private EC2 instance and three SSM interface VPC endpoints. This avoids a public bastion and keeps RDS private, but interface endpoints have hourly cost. Disable `enable_database_access_host` when the team does not need database access.
 
 NAT Gateway is enabled by environment input. A single NAT Gateway is cheaper but has an Availability Zone dependency. One NAT Gateway per AZ improves availability and avoids cross-AZ routing for private egress, but costs more. Development can disable NAT or use a single NAT Gateway depending on workload needs.
 

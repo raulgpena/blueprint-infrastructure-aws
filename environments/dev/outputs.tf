@@ -35,3 +35,13 @@ output "postgresql_secret_arn" {
   description = "Secrets Manager ARN for the RDS-managed PostgreSQL master password."
   value       = module.postgresql.master_user_secret_arn
 }
+
+output "database_access_instance_id" {
+  description = "Private EC2 instance ID used for SSM database port forwarding."
+  value       = try(module.database_access[0].instance_id, null)
+}
+
+output "postgresql_port_forward_command" {
+  description = "AWS CLI command that opens a local PostgreSQL tunnel through SSM."
+  value       = try("aws ssm start-session --target ${module.database_access[0].instance_id} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters '{\"host\":[\"${module.postgresql.db_instance_address}\"],\"portNumber\":[\"5432\"],\"localPortNumber\":[\"5432\"]}'", null)
+}

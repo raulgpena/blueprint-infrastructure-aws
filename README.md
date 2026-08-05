@@ -1,7 +1,3 @@
-# name: Raul Pena (raul.pena@gmail.com)
-# createAt: 2026-08-02T17:53:34-0300
-# Description: Project documentation for the AWS Terraform infrastructure scaffold, workflows, layout, validation, and operational notes.
-
 # Blueprint Infrastructure AWS
 
 Terraform project scaffold for AWS infrastructure with reusable modules and separate environment roots.
@@ -18,7 +14,7 @@ Terraform project scaffold for AWS infrastructure with reusable modules and sepa
 bootstrap/
   remote-state/       # Creates the S3 backend foundation
 modules/
-  networking/         # VPC, subnets, routing, optional NAT and S3 endpoint
+  networking/         # VPC, public/services/data subnets, routing, optional NAT and S3 endpoint
 environments/
   dev/
     backend.local.hcl  # S3 backend configuration for dev state
@@ -91,16 +87,20 @@ With the current `environments/dev/terraform.tfvars`, the dev environment create
 - Two public `/24` subnets:
   - `10.10.0.0/24`
   - `10.10.1.0/24`
-- Two private `/24` subnets:
+- Two private services `/24` subnets:
   - `10.10.2.0/24`
   - `10.10.3.0/24`
+- Two private data `/24` subnets:
+  - `10.10.4.0/24`
+  - `10.10.5.0/24`
 - One Internet Gateway
 - One public route table with `0.0.0.0/0` routed to the Internet Gateway
-- One private route table per private subnet
-- One S3 Gateway VPC Endpoint attached to public and private route tables
+- One private services route table per services subnet
+- One private data route table per data subnet
+- One S3 Gateway VPC Endpoint attached to services and data route tables
 - No NAT Gateway by default
 
-Public subnets do not auto-assign public IPs on launch. Private subnets do not have general outbound internet access unless NAT Gateway or additional VPC endpoints are enabled.
+Public subnets do not auto-assign public IPs on launch. Services subnets can optionally use NAT Gateway for outbound internet access. Data subnets do not receive a NAT route and should stay reachable only from controlled private paths.
 
 ## Cost Notes
 

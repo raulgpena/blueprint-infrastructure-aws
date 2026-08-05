@@ -62,7 +62,7 @@ variable "az_count" {
 }
 
 variable "enable_nat_gateway" {
-  description = "Whether private subnets should route internet egress through NAT Gateway."
+  description = "Whether private services subnets should route internet egress through NAT Gateway."
   type        = bool
   default     = true
 }

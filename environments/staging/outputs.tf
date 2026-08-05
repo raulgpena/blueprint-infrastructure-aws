@@ -7,9 +7,14 @@ output "vpc_id" {
   value       = module.networking.vpc_id
 }
 
-output "private_subnet_ids" {
-  description = "Private subnet IDs by Availability Zone."
-  value       = module.networking.private_subnet_ids
+output "services_subnet_ids" {
+  description = "Private services subnet IDs by Availability Zone."
+  value       = module.networking.services_subnet_ids
+}
+
+output "data_subnet_ids" {
+  description = "Private data subnet IDs by Availability Zone."
+  value       = module.networking.data_subnet_ids
 }
 
 output "public_subnet_ids" {

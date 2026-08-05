@@ -7,7 +7,7 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-# Build the foundational VPC network, creating public/private subnets across the availability zones.
+# Build the foundational VPC network, creating public, services, and data subnets across Availability Zones.
 module "networking" {
   source = "../../modules/networking"
 

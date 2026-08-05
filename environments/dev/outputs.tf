@@ -8,10 +8,16 @@ output "vpc_id" {
   value       = module.networking.vpc_id
 }
 
-# List of private subnet IDs organized by Availability Zone where backend resources will be deployed.
-output "private_subnet_ids" {
-  description = "Private subnet IDs by Availability Zone."
-  value       = module.networking.private_subnet_ids
+# List of private services subnet IDs organized by Availability Zone where user workloads run.
+output "services_subnet_ids" {
+  description = "Private services subnet IDs by Availability Zone."
+  value       = module.networking.services_subnet_ids
+}
+
+# List of private data subnet IDs organized by Availability Zone where backend data services run.
+output "data_subnet_ids" {
+  description = "Private data subnet IDs by Availability Zone."
+  value       = module.networking.data_subnet_ids
 }
 
 # List of public subnet IDs organized by Availability Zone for resources that require internet access.

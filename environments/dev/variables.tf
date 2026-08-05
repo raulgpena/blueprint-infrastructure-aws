@@ -70,9 +70,9 @@ variable "az_count" {
   }
 }
 
-# Toggle to deploy NAT Gateways, allowing private subnet workloads outbound egress access to the internet.
+# Toggle to deploy NAT Gateways, allowing private services workloads outbound egress access to the internet.
 variable "enable_nat_gateway" {
-  description = "Whether private subnets should route internet egress through NAT Gateway."
+  description = "Whether private services subnets should route internet egress through NAT Gateway."
   type        = bool
   default     = false
 }

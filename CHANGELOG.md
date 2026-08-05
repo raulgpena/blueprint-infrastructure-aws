@@ -24,6 +24,7 @@ All notable changes to this Terraform infrastructure project are documented in t
 - Changed Terraform backend locking from deprecated DynamoDB-based locking to native S3 lock files with `use_lockfile = true`.
 - Updated Terraform version requirements to `>= 1.10.0, < 2.0.0` for native S3 backend lock file support.
 - Simplified networking module tagging by relying on provider `default_tags` for standard tags and keeping only resource-specific tags in the module.
+- Split the networking module private tier into separate `services` and `data` subnet tiers with independent route tables.
 
 ### Removed
 

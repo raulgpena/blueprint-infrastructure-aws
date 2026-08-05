@@ -28,14 +28,20 @@ variable "public_subnet_newbits" {
   default     = 8
 }
 
-variable "private_subnet_newbits" {
-  description = "Additional subnet bits for private subnets."
+variable "services_subnet_newbits" {
+  description = "Additional subnet bits for private services subnets."
+  type        = number
+  default     = 8
+}
+
+variable "data_subnet_newbits" {
+  description = "Additional subnet bits for private data subnets."
   type        = number
   default     = 8
 }
 
 variable "enable_nat_gateway" {
-  description = "Whether private subnets should route internet egress through NAT Gateway."
+  description = "Whether private services subnets should route internet egress through NAT Gateway."
   type        = bool
   default     = true
 }

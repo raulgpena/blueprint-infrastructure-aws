@@ -1,6 +1,6 @@
 # name: Raul Pena (raul.pena@gmail.com)
 # createAt: 2026-08-02T17:53:34-0300
-# Description: Reusable AWS VPC networking resources with public and private subnets, routing, NAT, and S3 endpoint support.
+# Description: Reusable AWS VPC networking resources with public, services, and data subnets, routing, NAT, and S3 endpoint support.
 
 resource "aws_vpc" "this" {
   cidr_block           = var.vpc_cidr
@@ -34,16 +34,29 @@ resource "aws_subnet" "public" {
   }
 }
 
-resource "aws_subnet" "private" {
+resource "aws_subnet" "services" {
   for_each = local.az_map
 
   vpc_id            = aws_vpc.this.id
   availability_zone = each.key
-  cidr_block        = cidrsubnet(var.vpc_cidr, var.private_subnet_newbits, each.value.index + length(var.availability_zones))
+  cidr_block        = cidrsubnet(var.vpc_cidr, var.services_subnet_newbits, each.value.index + length(var.availability_zones))
 
   tags = {
-    Name = "${var.name_prefix}-private-${each.key}"
-    tier = "private"
+    Name = "${var.name_prefix}-services-${each.key}"
+    tier = "services"
+  }
+}
+
+resource "aws_subnet" "data" {
+  for_each = local.az_map
+
+  vpc_id            = aws_vpc.this.id
+  availability_zone = each.key
+  cidr_block        = cidrsubnet(var.vpc_cidr, var.data_subnet_newbits, each.value.index + (length(var.availability_zones) * 2))
+
+  tags = {
+    Name = "${var.name_prefix}-data-${each.key}"
+    tier = "data"
   }
 }
 
@@ -91,7 +104,7 @@ resource "aws_nat_gateway" "this" {
   depends_on = [aws_internet_gateway.this]
 }
 
-resource "aws_route_table" "private" {
+resource "aws_route_table" "services" {
   for_each = local.az_map
 
   vpc_id = aws_vpc.this.id
@@ -106,16 +119,34 @@ resource "aws_route_table" "private" {
   }
 
   tags = {
-    Name = "${var.name_prefix}-private-${each.key}"
-    tier = "private"
+    Name = "${var.name_prefix}-services-${each.key}"
+    tier = "services"
   }
 }
 
-resource "aws_route_table_association" "private" {
-  for_each = aws_subnet.private
+resource "aws_route_table_association" "services" {
+  for_each = aws_subnet.services
 
   subnet_id      = each.value.id
-  route_table_id = aws_route_table.private[each.key].id
+  route_table_id = aws_route_table.services[each.key].id
+}
+
+resource "aws_route_table" "data" {
+  for_each = local.az_map
+
+  vpc_id = aws_vpc.this.id
+
+  tags = {
+    Name = "${var.name_prefix}-data-${each.key}"
+    tier = "data"
+  }
+}
+
+resource "aws_route_table_association" "data" {
+  for_each = aws_subnet.data
+
+  subnet_id      = each.value.id
+  route_table_id = aws_route_table.data[each.key].id
 }
 
 resource "aws_vpc_endpoint" "s3" {
@@ -124,7 +155,7 @@ resource "aws_vpc_endpoint" "s3" {
   vpc_id            = aws_vpc.this.id
   service_name      = "com.amazonaws.${data.aws_region.current.name}.s3"
   vpc_endpoint_type = "Gateway"
-  route_table_ids   = concat([aws_route_table.public.id], values(aws_route_table.private)[*].id)
+  route_table_ids   = concat(values(aws_route_table.services)[*].id, values(aws_route_table.data)[*].id)
 
   tags = {
     Name = "${var.name_prefix}-s3-endpoint"

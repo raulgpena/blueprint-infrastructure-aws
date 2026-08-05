@@ -17,9 +17,14 @@ output "public_subnet_ids" {
   value       = { for az, subnet in aws_subnet.public : az => subnet.id }
 }
 
-output "private_subnet_ids" {
-  description = "Private subnet IDs by Availability Zone."
-  value       = { for az, subnet in aws_subnet.private : az => subnet.id }
+output "services_subnet_ids" {
+  description = "Private services subnet IDs by Availability Zone."
+  value       = { for az, subnet in aws_subnet.services : az => subnet.id }
+}
+
+output "data_subnet_ids" {
+  description = "Private data subnet IDs by Availability Zone."
+  value       = { for az, subnet in aws_subnet.data : az => subnet.id }
 }
 
 output "public_route_table_id" {
@@ -27,7 +32,12 @@ output "public_route_table_id" {
   value       = aws_route_table.public.id
 }
 
-output "private_route_table_ids" {
-  description = "Private route table IDs by Availability Zone."
-  value       = { for az, route_table in aws_route_table.private : az => route_table.id }
+output "services_route_table_ids" {
+  description = "Private services route table IDs by Availability Zone."
+  value       = { for az, route_table in aws_route_table.services : az => route_table.id }
+}
+
+output "data_route_table_ids" {
+  description = "Private data route table IDs by Availability Zone."
+  value       = { for az, route_table in aws_route_table.data : az => route_table.id }
 }

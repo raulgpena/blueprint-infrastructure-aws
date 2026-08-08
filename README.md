@@ -16,6 +16,7 @@ bootstrap/
 modules/
   networking/         # VPC, public/services/data subnets, routing, optional NAT and S3 endpoint
   rds-postgresql/     # Private PostgreSQL RDS instance, subnet group, and security group
+  route53-public-zone/ # Optional public hosted zone for externally registered domains
   s3-artifact-repository/ # Private S3 repositories for Maven artifacts and Helm charts
   ssm-port-forward-host/ # Private EC2 helper and SSM endpoints for database port forwarding
 environments/
@@ -25,6 +26,7 @@ environments/
     networking.tf      # VPC module composition
     postgresql.tf      # PostgreSQL RDS module composition
     database-access.tf # Dev-only SSM database access helper
+    dns.tf             # Optional Route 53 public hosted zone
     terraform.tfvars   # Dev input values
   staging/
   prod/
@@ -175,6 +177,25 @@ The buckets are private, block public access, enable versioning, use SSE-S3 encr
 
 This project intentionally does not create S3 repositories for npm or NuGet. Use AWS CodeArtifact later for npm and NuGet because it is a package repository service with native package-manager support.
 
+## Public DNS
+
+Dev can optionally create a Route 53 public hosted zone for a domain that was registered outside AWS, such as GoDaddy:
+
+```hcl
+create_public_hosted_zone      = true
+public_hosted_zone_domain_name = "example.com"
+```
+
+After applying, Terraform outputs the Route 53 name servers:
+
+```sh
+terraform output public_hosted_zone_name_servers
+```
+
+Copy those name servers into the registrar where the domain was purchased. Route 53 will manage DNS records only after the registrar delegates the domain to those AWS name servers.
+
+Before changing name servers at the registrar, copy any existing DNS records into Route 53. Otherwise, existing services such as websites or email can stop resolving.
+
 ## Cost Notes
 
 Terraform state uses S3-managed server-side encryption (SSE-S3 / `AES256`) to avoid KMS monthly key and API request charges for backend state storage. Use SSE-KMS instead only when customer-managed key policies, KMS audit events, or stricter key lifecycle controls are required.
@@ -188,6 +209,8 @@ RDS cost is driven mainly by the DB instance class, storage size, backup retenti
 Dev database access adds one private `t3.micro` EC2 instance and three SSM interface VPC endpoints. The helper uses standard CPU credits to avoid T-family unlimited credit surprises. This avoids a public bastion and keeps RDS private, but interface endpoints have hourly cost. Disable `enable_database_access_host` when the team does not need database access.
 
 S3 artifact repositories have S3 storage and request costs. They do not create customer-managed KMS keys because they use SSE-S3.
+
+Route 53 public hosted zones have a monthly hosted zone cost plus DNS query costs. Keep `create_public_hosted_zone = false` until DNS delegation is actually needed.
 
 NAT Gateway is enabled by environment input. A single NAT Gateway is cheaper but has an Availability Zone dependency. One NAT Gateway per AZ improves availability and avoids cross-AZ routing for private egress, but costs more. Development can disable NAT or use a single NAT Gateway depending on workload needs.
 

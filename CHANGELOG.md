@@ -12,6 +12,7 @@ All notable changes to this Terraform infrastructure project are documented in t
 - Added a reusable private PostgreSQL RDS module with environment-specific dev, staging, and prod defaults.
 - Added a dev-only private SSM database access helper for PostgreSQL port forwarding.
 - Added optional dev S3 artifact repositories for Maven artifacts and Helm charts.
+- Added optional dev Route 53 public hosted zone support for externally registered domains.
 - Added a remote-state bootstrap stack for encrypted S3 state storage.
 - Added example backend and variable files for each environment.
 - Added project documentation, Terraform ignore rules, and Terraform CLI version metadata.

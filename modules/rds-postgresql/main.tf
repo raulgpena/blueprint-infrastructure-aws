@@ -2,6 +2,7 @@
 # createAt: 2026-08-04T21:24:39-0300
 # Description: Private PostgreSQL RDS instance, subnet group, and security group.
 
+# DB subnet group associating private data subnets for database placement
 resource "aws_db_subnet_group" "this" {
   name        = "${var.name_prefix}-postgresql"
   description = "Private data subnets for ${var.name_prefix} PostgreSQL"
@@ -12,11 +13,13 @@ resource "aws_db_subnet_group" "this" {
   }
 }
 
+# Security group controlling ingress and egress for PostgreSQL
 resource "aws_security_group" "this" {
   name        = "${var.name_prefix}-postgresql"
   description = "Allow PostgreSQL access from approved private services"
   vpc_id      = var.vpc_id
 
+  # Ingress rule dynamically created per approved application security group
   dynamic "ingress" {
     for_each = toset(var.allowed_security_group_ids)
 
@@ -29,6 +32,7 @@ resource "aws_security_group" "this" {
     }
   }
 
+  # Allow all outbound traffic for database connectivity
   egress {
     description = "Allow established outbound database responses"
     from_port   = 0
@@ -42,28 +46,34 @@ resource "aws_security_group" "this" {
   }
 }
 
+# RDS PostgreSQL database instance
 resource "aws_db_instance" "this" {
   identifier = "${var.name_prefix}-postgresql"
 
+  # Engine and compute specifications
   engine         = "postgres"
   engine_version = var.engine_version
   instance_class = var.instance_class
 
+  # Storage configuration and encryption at rest
   allocated_storage     = var.allocated_storage
   max_allocated_storage = var.max_allocated_storage
   storage_encrypted     = true
   storage_type          = var.storage_type
 
+  # Database credentials and AWS Secrets Manager password management
   db_name  = var.database_name
   username = var.master_username
 
   manage_master_user_password = true
 
+  # Network and security placement
   db_subnet_group_name   = aws_db_subnet_group.this.name
   vpc_security_group_ids = [aws_security_group.this.id]
   publicly_accessible    = false
   port                   = 5432
 
+  # High availability, backups, and deletion safety
   multi_az                   = var.multi_az
   backup_retention_period    = var.backup_retention_period
   deletion_protection        = var.deletion_protection
@@ -72,6 +82,7 @@ resource "aws_db_instance" "this" {
   auto_minor_version_upgrade = true
   copy_tags_to_snapshot      = true
 
+  # Observability and performance monitoring
   performance_insights_enabled = var.performance_insights_enabled
   monitoring_interval          = var.monitoring_interval
 }

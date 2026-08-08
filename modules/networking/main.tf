@@ -2,6 +2,7 @@
 # createAt: 2026-08-02T17:53:34-0300
 # Description: Reusable AWS VPC networking resources with public, services, and data subnets, routing, NAT, and S3 endpoint support.
 
+# Main Virtual Private Cloud (VPC)
 resource "aws_vpc" "this" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
@@ -12,11 +13,13 @@ resource "aws_vpc" "this" {
   }
 }
 
+# Base security group for services layer workloads
 resource "aws_security_group" "services" {
   name        = "${var.name_prefix}-services"
   description = "Security group for private services workloads"
   vpc_id      = aws_vpc.this.id
 
+  # Allow all outbound traffic
   egress {
     description = "Allow outbound traffic from services workloads"
     from_port   = 0
@@ -31,6 +34,7 @@ resource "aws_security_group" "services" {
   }
 }
 
+# Internet Gateway for public subnet ingress and egress
 resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
 
@@ -39,6 +43,7 @@ resource "aws_internet_gateway" "this" {
   }
 }
 
+# Public subnets across configured availability zones
 resource "aws_subnet" "public" {
   for_each = local.az_map
 
@@ -53,6 +58,7 @@ resource "aws_subnet" "public" {
   }
 }
 
+# Private services subnets across configured availability zones
 resource "aws_subnet" "services" {
   for_each = local.az_map
 
@@ -66,6 +72,7 @@ resource "aws_subnet" "services" {
   }
 }
 
+# Isolated private data subnets across configured availability zones
 resource "aws_subnet" "data" {
   for_each = local.az_map
 
@@ -79,6 +86,7 @@ resource "aws_subnet" "data" {
   }
 }
 
+# Route table directing public traffic to the Internet Gateway
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.this.id
 
@@ -93,6 +101,7 @@ resource "aws_route_table" "public" {
   }
 }
 
+# Associate public subnets with the public route table
 resource "aws_route_table_association" "public" {
   for_each = aws_subnet.public
 
@@ -100,6 +109,7 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
+# Elastic IP allocation for NAT Gateway(s)
 resource "aws_eip" "nat" {
   for_each = local.nat_gateway_map
 
@@ -110,6 +120,7 @@ resource "aws_eip" "nat" {
   }
 }
 
+# NAT Gateway(s) in public subnets for outbound internet from private subnets
 resource "aws_nat_gateway" "this" {
   for_each = local.nat_gateway_map
 
@@ -123,11 +134,13 @@ resource "aws_nat_gateway" "this" {
   depends_on = [aws_internet_gateway.this]
 }
 
+# Route tables for private services subnets with optional NAT route
 resource "aws_route_table" "services" {
   for_each = local.az_map
 
   vpc_id = aws_vpc.this.id
 
+  # Conditionally route outbound internet traffic through the appropriate NAT Gateway
   dynamic "route" {
     for_each = var.enable_nat_gateway ? [1] : []
 
@@ -143,6 +156,7 @@ resource "aws_route_table" "services" {
   }
 }
 
+# Associate services subnets with their respective route tables
 resource "aws_route_table_association" "services" {
   for_each = aws_subnet.services
 
@@ -150,6 +164,7 @@ resource "aws_route_table_association" "services" {
   route_table_id = aws_route_table.services[each.key].id
 }
 
+# Isolated route tables for private data tier subnets (no NAT route)
 resource "aws_route_table" "data" {
   for_each = local.az_map
 
@@ -161,6 +176,7 @@ resource "aws_route_table" "data" {
   }
 }
 
+# Associate data subnets with their respective isolated route tables
 resource "aws_route_table_association" "data" {
   for_each = aws_subnet.data
 
@@ -168,6 +184,7 @@ resource "aws_route_table_association" "data" {
   route_table_id = aws_route_table.data[each.key].id
 }
 
+# Gateway VPC Endpoint for direct, private S3 traffic routing
 resource "aws_vpc_endpoint" "s3" {
   count = var.enable_s3_endpoint ? 1 : 0
 
@@ -181,4 +198,5 @@ resource "aws_vpc_endpoint" "s3" {
   }
 }
 
+# Fetch current AWS region for VPC endpoint configuration
 data "aws_region" "current" {}

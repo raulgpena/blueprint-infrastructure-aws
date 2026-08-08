@@ -230,3 +230,24 @@ variable "artifact_repository_force_destroy" {
   type        = bool
   default     = false
 }
+
+# Optional Route 53 public hosted zone configuration
+variable "create_public_hosted_zone" {
+  description = "Whether to create a Route 53 public hosted zone for an externally registered domain."
+  type        = bool
+  default     = false
+}
+
+# Optional Route 53 public hosted zone configuration
+variable "public_hosted_zone_domain_name" {
+  description = "Domain name for the Route 53 public hosted zone."
+  type        = string
+  default     = ""
+}
+
+# Optional Route 53 public hosted zone configuration
+variable "public_hosted_zone_force_destroy" {
+  description = "Whether Terraform can delete all records in the hosted zone when destroying it."
+  type        = bool
+  default     = false
+}

@@ -2,8 +2,10 @@
 # createAt: 2026-08-04T21:50:02-0300
 # Description: Private EC2 helper for SSM Session Manager port forwarding and required SSM VPC endpoints.
 
+# Fetch current AWS region
 data "aws_region" "current" {}
 
+# Fetch latest Amazon Linux 2023 AMI for x86_64 architecture
 data "aws_ami" "al2023_x86_64" {
   most_recent = true
   owners      = ["amazon"]
@@ -24,6 +26,7 @@ data "aws_ami" "al2023_x86_64" {
   }
 }
 
+# AWS services required for SSM Session Manager private communication
 locals {
   endpoint_services = toset([
     "ssm",
@@ -32,6 +35,7 @@ locals {
   ])
 }
 
+# IAM role for EC2 instance allowing SSM agent management
 resource "aws_iam_role" "this" {
   name = "${var.name_prefix}-ssm-db-access"
 
@@ -49,21 +53,25 @@ resource "aws_iam_role" "this" {
   })
 }
 
+# Attach standard AWS managed policy for SSM agent functionality
 resource "aws_iam_role_policy_attachment" "ssm_core" {
   role       = aws_iam_role.this.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+# IAM instance profile for attaching the role to the EC2 instance
 resource "aws_iam_instance_profile" "this" {
   name = "${var.name_prefix}-ssm-db-access"
   role = aws_iam_role.this.name
 }
 
+# Security group allowing HTTPS access to SSM interface endpoints
 resource "aws_security_group" "endpoints" {
   name        = "${var.name_prefix}-ssm-endpoints"
   description = "Allow private services workloads to connect to SSM interface endpoints"
   vpc_id      = var.vpc_id
 
+  # Allow inbound HTTPS traffic from authorized client security groups
   dynamic "ingress" {
     for_each = toset(var.endpoint_source_security_group_ids)
 
@@ -81,6 +89,7 @@ resource "aws_security_group" "endpoints" {
   }
 }
 
+# VPC Interface Endpoints for SSM Session Manager private connectivity
 resource "aws_vpc_endpoint" "ssm" {
   for_each = local.endpoint_services
 
@@ -96,6 +105,7 @@ resource "aws_vpc_endpoint" "ssm" {
   }
 }
 
+# Bastion host instance for SSM port forwarding and database access
 resource "aws_instance" "this" {
   ami                         = data.aws_ami.al2023_x86_64.id
   instance_type               = var.instance_type
@@ -104,6 +114,7 @@ resource "aws_instance" "this" {
   iam_instance_profile        = aws_iam_instance_profile.this.name
   associate_public_ip_address = false
 
+  # Enforce IMDSv2 for enhanced security
   metadata_options {
     http_endpoint = "enabled"
     http_tokens   = "required"
@@ -113,6 +124,7 @@ resource "aws_instance" "this" {
     cpu_credits = "standard"
   }
 
+  # Encrypted EBS root volume
   root_block_device {
     encrypted   = true
     volume_size = var.root_volume_size
@@ -123,6 +135,7 @@ resource "aws_instance" "this" {
     Name = "${var.name_prefix}-ssm-db-access"
   }
 
+  # Ensure IAM permissions and VPC endpoints are established before instance launch
   depends_on = [
     aws_iam_role_policy_attachment.ssm_core,
     aws_vpc_endpoint.ssm,

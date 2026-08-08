@@ -61,3 +61,15 @@ output "artifact_repository_uris" {
   description = "Private S3 artifact repository URIs by repository type."
   value       = module.artifact_repositories.repository_uris
 }
+
+# Route 53 hosted zone ID output
+output "public_hosted_zone_id" {
+  description = "Route 53 public hosted zone ID."
+  value       = module.public_hosted_zone.zone_id
+}
+
+# Route 53 name servers output for external registrar configuration
+output "public_hosted_zone_name_servers" {
+  description = "Route 53 name servers to configure at the external domain registrar."
+  value       = module.public_hosted_zone.name_servers
+}

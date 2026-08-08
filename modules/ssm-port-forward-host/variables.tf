@@ -35,7 +35,7 @@ variable "endpoint_source_security_group_ids" {
 variable "instance_type" {
   description = "EC2 instance type for the SSM helper."
   type        = string
-  default     = "t4g.nano"
+  default     = "t3.micro"
 }
 
 variable "root_volume_size" {

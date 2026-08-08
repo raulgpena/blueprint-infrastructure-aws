@@ -2,6 +2,7 @@
 # createAt: 2026-08-02T17:53:34-0300
 # Description: Staging environment PostgreSQL RDS module composition.
 
+# Create a private PostgreSQL database in the data subnet tier for staging environment.
 module "postgresql" {
   source = "../../modules/rds-postgresql"
 

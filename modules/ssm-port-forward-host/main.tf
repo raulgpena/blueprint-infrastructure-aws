@@ -4,18 +4,18 @@
 
 data "aws_region" "current" {}
 
-data "aws_ami" "al2023_arm64" {
+data "aws_ami" "al2023_x86_64" {
   most_recent = true
   owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["al2023-ami-2023.*-kernel-6.1-arm64"]
+    values = ["al2023-ami-2023.*-kernel-6.1-x86_64"]
   }
 
   filter {
     name   = "architecture"
-    values = ["arm64"]
+    values = ["x86_64"]
   }
 
   filter {
@@ -97,7 +97,7 @@ resource "aws_vpc_endpoint" "ssm" {
 }
 
 resource "aws_instance" "this" {
-  ami                         = data.aws_ami.al2023_arm64.id
+  ami                         = data.aws_ami.al2023_x86_64.id
   instance_type               = var.instance_type
   subnet_id                   = var.subnet_id
   vpc_security_group_ids      = var.instance_security_group_ids
@@ -107,6 +107,10 @@ resource "aws_instance" "this" {
   metadata_options {
     http_endpoint = "enabled"
     http_tokens   = "required"
+  }
+
+  credit_specification {
+    cpu_credits = "standard"
   }
 
   root_block_device {

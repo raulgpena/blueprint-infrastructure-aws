@@ -26,22 +26,38 @@ output "public_subnet_ids" {
   value       = module.networking.public_subnet_ids
 }
 
+# Export the private PostgreSQL RDS endpoint.
 output "postgresql_endpoint" {
   description = "Private PostgreSQL RDS endpoint."
   value       = module.postgresql.db_instance_endpoint
 }
 
+# Export the RDS-managed PostgreSQL master password ARN.
 output "postgresql_secret_arn" {
   description = "Secrets Manager ARN for the RDS-managed PostgreSQL master password."
   value       = module.postgresql.master_user_secret_arn
 }
 
+# Export the private SSM host ID used for database port forwarding.
 output "database_access_instance_id" {
   description = "Private EC2 instance ID used for SSM database port forwarding."
   value       = try(module.database_access[0].instance_id, null)
 }
 
+# Export the SSM port-forward command for PostgreSQL access. It uses the private helper instance and the RDS private endpoint.
 output "postgresql_port_forward_command" {
   description = "AWS CLI command that opens a local PostgreSQL tunnel through SSM."
   value       = try("aws ssm start-session --target ${module.database_access[0].instance_id} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters '{\"host\":[\"${module.postgresql.db_instance_address}\"],\"portNumber\":[\"5432\"],\"localPortNumber\":[\"5432\"]}'", null)
+}
+
+# S3 artifact repository bucket names output
+output "artifact_repository_bucket_names" {
+  description = "Private S3 artifact repository bucket names by repository type."
+  value       = module.artifact_repositories.bucket_names
+}
+
+# S3 artifact repository URIs output
+output "artifact_repository_uris" {
+  description = "Private S3 artifact repository URIs by repository type."
+  value       = module.artifact_repositories.repository_uris
 }

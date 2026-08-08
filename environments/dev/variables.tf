@@ -91,74 +91,142 @@ variable "enable_s3_endpoint" {
   default     = true
 }
 
+# RDS PostgreSQL configuration
 variable "rds_database_name" {
   description = "Initial PostgreSQL database name."
   type        = string
   default     = "appdb"
 }
 
+# RDS PostgreSQL instance configuration
 variable "rds_instance_class" {
   description = "RDS PostgreSQL instance class."
   type        = string
   default     = "db.t4g.micro"
 }
 
+# RDS PostgreSQL storage configuration
 variable "rds_allocated_storage" {
   description = "Initial RDS PostgreSQL storage size in GiB."
   type        = number
   default     = 20
 }
 
+# RDS PostgreSQL autoscaling configuration
 variable "rds_max_allocated_storage" {
   description = "Maximum RDS PostgreSQL storage size in GiB for autoscaling."
   type        = number
   default     = 100
 }
 
+# RDS PostgreSQL multi-AZ configuration
 variable "rds_multi_az" {
   description = "Whether RDS PostgreSQL is deployed as Multi-AZ."
   type        = bool
   default     = false
 }
 
+# RDS PostgreSQL backup retention period
 variable "rds_backup_retention_period" {
   description = "Number of days to retain RDS automated backups."
   type        = number
   default     = 1
 }
 
+# RDS PostgreSQL deletion protection configuration
 variable "rds_deletion_protection" {
   description = "Whether RDS deletion protection is enabled."
   type        = bool
   default     = false
 }
 
+# RDS PostgreSQL skip final snapshot configuration
 variable "rds_skip_final_snapshot" {
   description = "Whether to skip a final RDS snapshot when deleting the DB instance."
   type        = bool
   default     = true
 }
 
+# RDS Performance Insights configuration
 variable "rds_performance_insights_enabled" {
   description = "Whether RDS Performance Insights is enabled."
   type        = bool
   default     = false
 }
 
+# RDS private SSM helper configuration
 variable "enable_database_access_host" {
   description = "Whether to create a private SSM helper for developer database port forwarding."
   type        = bool
   default     = true
 }
 
+# RDS private SSM helper instance type configuration
 variable "database_access_instance_type" {
   description = "EC2 instance type for the private SSM database access helper."
   type        = string
-  default     = "t4g.nano"
+  default     = "t3.micro"
 }
 
+# RDS private SSM helper root volume size configuration
 variable "database_access_root_volume_size" {
   description = "Root EBS volume size in GiB for the private SSM database access helper."
   type        = number
   default     = 8
+}
+
+# Optional private S3 artifact repository configuration
+variable "create_maven_repository" {
+  description = "Whether to create a private S3-backed Maven repository."
+  type        = bool
+  default     = false
+}
+
+# Optional private S3 artifact repository configuration
+variable "create_helm_repository" {
+  description = "Whether to create a private S3-backed Helm chart repository."
+  type        = bool
+  default     = false
+}
+
+# Optional private S3 artifact repository configuration
+variable "maven_repository_bucket_name" {
+  description = "Globally unique S3 bucket name for the Maven repository."
+  type        = string
+  default     = ""
+}
+
+# Optional private S3 artifact repository configuration
+variable "helm_repository_bucket_name" {
+  description = "Globally unique S3 bucket name for the Helm chart repository."
+  type        = string
+  default     = ""
+}
+
+# Optional private S3 artifact repository configuration
+variable "maven_repository_prefix" {
+  description = "S3 prefix used as the Maven repository root."
+  type        = string
+  default     = "maven"
+}
+
+# Optional private S3 artifact repository configuration
+variable "helm_repository_prefix" {
+  description = "S3 prefix used as the Helm chart repository root."
+  type        = string
+  default     = "charts"
+}
+
+# Optional private S3 artifact repository configuration
+variable "artifact_repository_noncurrent_version_retention_days" {
+  description = "Number of days to retain noncurrent artifact object versions."
+  type        = number
+  default     = 30
+}
+
+# Optional private S3 artifact repository configuration
+variable "artifact_repository_force_destroy" {
+  description = "Whether Terraform can delete non-empty artifact repository buckets."
+  type        = bool
+  default     = false
 }

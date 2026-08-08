@@ -16,6 +16,7 @@ bootstrap/
 modules/
   networking/         # VPC, public/services/data subnets, routing, optional NAT and S3 endpoint
   rds-postgresql/     # Private PostgreSQL RDS instance, subnet group, and security group
+  s3-artifact-repository/ # Private S3 repositories for Maven artifacts and Helm charts
   ssm-port-forward-host/ # Private EC2 helper and SSM endpoints for database port forwarding
 environments/
   dev/
@@ -152,6 +153,28 @@ username: appadmin
 
 Retrieve the database password from the `postgresql_secret_arn` output in AWS Secrets Manager. Do not copy the password into Git or Terraform variable files.
 
+## S3 Artifact Repositories
+
+Dev can optionally create private S3-backed repositories for Maven artifacts and Helm charts:
+
+```hcl
+create_maven_repository = true
+create_helm_repository  = true
+```
+
+Each repository is controlled independently. Keep the value `false` when the repository is not needed.
+
+Before enabling either repository, set globally unique bucket names:
+
+```hcl
+maven_repository_bucket_name = "replace-with-globally-unique-maven-bucket"
+helm_repository_bucket_name  = "replace-with-globally-unique-helm-bucket"
+```
+
+The buckets are private, block public access, enable versioning, use SSE-S3 encryption, and retain noncurrent object versions for `artifact_repository_noncurrent_version_retention_days`.
+
+This project intentionally does not create S3 repositories for npm or NuGet. Use AWS CodeArtifact later for npm and NuGet because it is a package repository service with native package-manager support.
+
 ## Cost Notes
 
 Terraform state uses S3-managed server-side encryption (SSE-S3 / `AES256`) to avoid KMS monthly key and API request charges for backend state storage. Use SSE-KMS instead only when customer-managed key policies, KMS audit events, or stricter key lifecycle controls are required.
@@ -162,7 +185,9 @@ The scaffold does not create customer-managed KMS keys by default. Prefer no-ext
 
 RDS cost is driven mainly by the DB instance class, storage size, backup retention, Multi-AZ, and optional observability features. Dev uses a small Single-AZ instance for cost control. Prod enables Multi-AZ and deletion protection for reliability.
 
-Dev database access adds one small private EC2 instance and three SSM interface VPC endpoints. This avoids a public bastion and keeps RDS private, but interface endpoints have hourly cost. Disable `enable_database_access_host` when the team does not need database access.
+Dev database access adds one private `t3.micro` EC2 instance and three SSM interface VPC endpoints. The helper uses standard CPU credits to avoid T-family unlimited credit surprises. This avoids a public bastion and keeps RDS private, but interface endpoints have hourly cost. Disable `enable_database_access_host` when the team does not need database access.
+
+S3 artifact repositories have S3 storage and request costs. They do not create customer-managed KMS keys because they use SSE-S3.
 
 NAT Gateway is enabled by environment input. A single NAT Gateway is cheaper but has an Availability Zone dependency. One NAT Gateway per AZ improves availability and avoids cross-AZ routing for private egress, but costs more. Development can disable NAT or use a single NAT Gateway depending on workload needs.
 

@@ -2,6 +2,7 @@
 # createAt: 2026-08-02T17:53:34-0300
 # Description: Staging environment networking module composition.
 
+# Build the foundational VPC network, creating public, services, and data subnets across Availability Zones.
 module "networking" {
   source = "../../modules/networking"
 

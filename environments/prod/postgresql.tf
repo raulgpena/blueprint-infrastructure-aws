@@ -2,6 +2,7 @@
 # createAt: 2026-08-02T17:53:34-0300
 # Description: Prod environment PostgreSQL RDS module composition.
 
+# Create a private PostgreSQL database in the data subnet tier for prod application.
 module "postgresql" {
   source = "../../modules/rds-postgresql"
 

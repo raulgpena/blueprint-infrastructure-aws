@@ -1,7 +1,3 @@
-# name: Raul Pena (raul.pena@gmail.com)
-# createAt: 2026-08-02T17:55:20-0300
-# Description: Changelog for tracking notable changes to the AWS Terraform infrastructure project.
-
 # Changelog
 
 All notable changes to this Terraform infrastructure project are documented in this file.
@@ -15,6 +11,7 @@ All notable changes to this Terraform infrastructure project are documented in t
 - Added a reusable module for VPC networking.
 - Added a reusable private PostgreSQL RDS module with environment-specific dev, staging, and prod defaults.
 - Added a dev-only private SSM database access helper for PostgreSQL port forwarding.
+- Added optional dev S3 artifact repositories for Maven artifacts and Helm charts.
 - Added a remote-state bootstrap stack for encrypted S3 state storage.
 - Added example backend and variable files for each environment.
 - Added project documentation, Terraform ignore rules, and Terraform CLI version metadata.
@@ -30,6 +27,7 @@ All notable changes to this Terraform infrastructure project are documented in t
 - Split the networking module private tier into separate `services` and `data` subnet tiers with independent route tables.
 - Added a private services security group and restricted PostgreSQL ingress to that security group.
 - Added private SSM interface endpoints for dev database access without public SSH or NAT Gateway.
+- Changed the dev SSM database access helper to `t3.micro` with standard CPU credits for Free Tier-oriented EC2 defaults.
 
 ### Removed
 

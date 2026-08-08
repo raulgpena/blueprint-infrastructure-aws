@@ -2,6 +2,7 @@
 # createAt: 2026-08-02T17:53:34-0300
 # Description: Local naming and tagging values used by the prod environment.
 
+# Local variables are used to store common values that are used in multiple places in the Terraform configuration.
 locals {
   name_prefix = "${var.project}-${var.environment}"
 

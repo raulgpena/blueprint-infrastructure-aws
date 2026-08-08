@@ -17,3 +17,4 @@ terraform.tfvars
 *.auto.tfvars.json
 .DS_Store
 *.hcl
+session.txt

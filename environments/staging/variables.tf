@@ -153,3 +153,80 @@ variable "rds_performance_insights_enabled" {
   type        = bool
   default     = false
 }
+
+# Input variable for ElastiCache Valkey engine version
+variable "valkey_engine_version" {
+  description = "Valkey engine version."
+  type        = string
+  default     = "7.2"
+}
+
+# Input variable for ElastiCache Valkey node type
+variable "valkey_node_type" {
+  description = "ElastiCache Valkey node type."
+  type        = string
+  default     = "cache.t4g.small"
+}
+
+# Input variable for ElastiCache Valkey cache node count
+variable "valkey_num_cache_clusters" {
+  description = "Number of cache nodes in the Valkey replication group."
+  type        = number
+  default     = 1
+}
+
+# Input variable for ElastiCache Valkey automatic failover
+variable "valkey_automatic_failover_enabled" {
+  description = "Whether automatic failover is enabled for Valkey."
+  type        = bool
+  default     = false
+}
+
+# Input variable for ElastiCache Valkey Multi-AZ
+variable "valkey_multi_az_enabled" {
+  description = "Whether Multi-AZ is enabled for Valkey."
+  type        = bool
+  default     = false
+}
+
+# Input variable for ElastiCache Valkey snapshot retention
+variable "valkey_snapshot_retention_limit" {
+  description = "Number of days to retain automated Valkey snapshots."
+  type        = number
+  default     = 3
+}
+
+# Input variable for ElastiCache Valkey snapshot window
+variable "valkey_snapshot_window" {
+  description = "Daily UTC time range when ElastiCache creates Valkey snapshots."
+  type        = string
+  default     = "03:00-04:00"
+}
+
+# Input variable for ElastiCache Valkey maintenance window
+variable "valkey_maintenance_window" {
+  description = "Weekly UTC time range when ElastiCache can perform Valkey maintenance."
+  type        = string
+  default     = "sun:04:00-sun:05:00"
+}
+
+# Input variable for ElastiCache Valkey apply behavior
+variable "valkey_apply_immediately" {
+  description = "Whether eligible Valkey changes are applied immediately."
+  type        = bool
+  default     = false
+}
+
+# Input variable for ElastiCache Valkey in-transit encryption
+variable "valkey_transit_encryption_enabled" {
+  description = "Whether in-transit encryption is enabled for Valkey client connections."
+  type        = bool
+  default     = true
+}
+
+# Input variable for ElastiCache Valkey minor version upgrades
+variable "valkey_auto_minor_version_upgrade" {
+  description = "Whether ElastiCache can automatically apply minor Valkey version upgrades."
+  type        = bool
+  default     = true
+}

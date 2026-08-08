@@ -154,6 +154,83 @@ variable "rds_performance_insights_enabled" {
   default     = false
 }
 
+# ElastiCache Valkey engine version configuration
+variable "valkey_engine_version" {
+  description = "Valkey engine version."
+  type        = string
+  default     = "7.2"
+}
+
+# ElastiCache Valkey node size configuration
+variable "valkey_node_type" {
+  description = "ElastiCache Valkey node type."
+  type        = string
+  default     = "cache.t4g.micro"
+}
+
+# ElastiCache Valkey cluster count configuration
+variable "valkey_num_cache_clusters" {
+  description = "Number of cache nodes in the Valkey replication group."
+  type        = number
+  default     = 1
+}
+
+# ElastiCache Valkey automatic failover configuration
+variable "valkey_automatic_failover_enabled" {
+  description = "Whether automatic failover is enabled for Valkey."
+  type        = bool
+  default     = false
+}
+
+# ElastiCache Valkey Multi-AZ configuration
+variable "valkey_multi_az_enabled" {
+  description = "Whether Multi-AZ is enabled for Valkey."
+  type        = bool
+  default     = false
+}
+
+# ElastiCache Valkey snapshot retention configuration
+variable "valkey_snapshot_retention_limit" {
+  description = "Number of days to retain automated Valkey snapshots."
+  type        = number
+  default     = 1
+}
+
+# ElastiCache Valkey snapshot window configuration
+variable "valkey_snapshot_window" {
+  description = "Daily UTC time range when ElastiCache creates Valkey snapshots."
+  type        = string
+  default     = "03:00-04:00"
+}
+
+# ElastiCache Valkey maintenance window configuration
+variable "valkey_maintenance_window" {
+  description = "Weekly UTC time range when ElastiCache can perform Valkey maintenance."
+  type        = string
+  default     = "sun:04:00-sun:05:00"
+}
+
+# ElastiCache Valkey apply behavior configuration
+variable "valkey_apply_immediately" {
+  description = "Whether eligible Valkey changes are applied immediately."
+  type        = bool
+  default     = true
+}
+
+# ElastiCache Valkey in-transit encryption configuration
+variable "valkey_transit_encryption_enabled" {
+  description = "Whether in-transit encryption is enabled for Valkey client connections."
+  type        = bool
+  default     = true
+}
+
+# ElastiCache Valkey minor version upgrade configuration
+variable "valkey_auto_minor_version_upgrade" {
+  description = "Whether ElastiCache can automatically apply minor Valkey version upgrades."
+  type        = bool
+  default     = true
+}
+
 # RDS private SSM helper configuration
 variable "enable_database_access_host" {
   description = "Whether to create a private SSM helper for developer database port forwarding."

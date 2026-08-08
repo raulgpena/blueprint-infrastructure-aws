@@ -13,6 +13,7 @@ All notable changes to this Terraform infrastructure project are documented in t
 - Added a dev-only private SSM database access helper for PostgreSQL port forwarding.
 - Added optional dev S3 artifact repositories for Maven artifacts and Helm charts.
 - Added optional dev Route 53 public hosted zone support for externally registered domains.
+- Added a reusable private ElastiCache Valkey module and environment wiring for `dev`, `staging`, and `prod`, including private data subnet placement, services-tier-only security group ingress, encryption at rest, in-transit encryption, snapshots, and endpoint outputs.
 - Added a remote-state bootstrap stack for encrypted S3 state storage.
 - Added example backend and variable files for each environment.
 - Added project documentation, Terraform ignore rules, and Terraform CLI version metadata.
@@ -29,6 +30,7 @@ All notable changes to this Terraform infrastructure project are documented in t
 - Added a private services security group and restricted PostgreSQL ingress to that security group.
 - Added private SSM interface endpoints for dev database access without public SSH or NAT Gateway.
 - Changed the dev SSM database access helper to `t3.micro` with standard CPU credits for Free Tier-oriented EC2 defaults.
+- Documented Valkey usage, Redis-compatible connection outputs, TLS expectations, environment defaults, and cost notes in the README.
 
 ### Removed
 
@@ -38,9 +40,9 @@ All notable changes to this Terraform infrastructure project are documented in t
 ### Validation
 
 - Verified Terraform formatting with `terraform fmt -check -recursive`.
-- Initialized the `dev` environment with `terraform -chdir=environments/dev init -backend=false`.
+- Initialized the `dev`, `staging`, and `prod` environments with `terraform init -backend=false`.
 
 ### Known Limitations
 
-- Full AWS-provider validation for `environments/dev` is currently blocked by the local Terraform runtime failing to instantiate the downloaded AWS provider plugin.
+- Full AWS-provider validation for `environments/dev`, `environments/staging`, and `environments/prod` is currently blocked by the local Terraform runtime failing to instantiate the downloaded AWS provider plugin.
 - No AWS resources have been planned, created, modified, or destroyed.

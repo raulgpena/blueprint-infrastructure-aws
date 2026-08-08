@@ -37,3 +37,21 @@ output "postgresql_secret_arn" {
   description = "Secrets Manager ARN for the RDS-managed PostgreSQL master password."
   value       = module.postgresql.master_user_secret_arn
 }
+
+# Private Valkey primary endpoint output
+output "valkey_primary_endpoint_address" {
+  description = "Private Valkey primary endpoint address."
+  value       = module.valkey.primary_endpoint_address
+}
+
+# Private Valkey reader endpoint output
+output "valkey_reader_endpoint_address" {
+  description = "Private Valkey reader endpoint address."
+  value       = module.valkey.reader_endpoint_address
+}
+
+# Valkey client connection port output
+output "valkey_port" {
+  description = "Valkey client connection port."
+  value       = module.valkey.port
+}

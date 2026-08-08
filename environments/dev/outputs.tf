@@ -38,6 +38,24 @@ output "postgresql_secret_arn" {
   value       = module.postgresql.master_user_secret_arn
 }
 
+# Export the private Valkey primary endpoint.
+output "valkey_primary_endpoint_address" {
+  description = "Private Valkey primary endpoint address."
+  value       = module.valkey.primary_endpoint_address
+}
+
+# Export the private Valkey reader endpoint.
+output "valkey_reader_endpoint_address" {
+  description = "Private Valkey reader endpoint address."
+  value       = module.valkey.reader_endpoint_address
+}
+
+# Export the private Valkey port.
+output "valkey_port" {
+  description = "Valkey client connection port."
+  value       = module.valkey.port
+}
+
 # Export the private SSM host ID used for database port forwarding.
 output "database_access_instance_id" {
   description = "Private EC2 instance ID used for SSM database port forwarding."

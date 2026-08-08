@@ -14,6 +14,7 @@ Terraform project scaffold for AWS infrastructure with reusable modules and sepa
 bootstrap/
   remote-state/       # Creates the S3 backend foundation
 modules/
+  elasticache-valkey/ # Private ElastiCache Valkey replication group, subnet group, and security group
   networking/         # VPC, public/services/data subnets, routing, optional NAT and S3 endpoint
   rds-postgresql/     # Private PostgreSQL RDS instance, subnet group, and security group
   route53-public-zone/ # Optional public hosted zone for externally registered domains
@@ -25,6 +26,7 @@ environments/
     data.tf            # Data sources
     networking.tf      # VPC module composition
     postgresql.tf      # PostgreSQL RDS module composition
+    cache.tf           # ElastiCache Valkey module composition
     database-access.tf # Dev-only SSM database access helper
     dns.tf             # Optional Route 53 public hosted zone
     terraform.tfvars   # Dev input values
@@ -126,6 +128,46 @@ Environment defaults:
 
 RDS is configured with `publicly_accessible = false`, storage encryption enabled, and RDS-managed master password support. This avoids storing the database password in Git or plain Terraform variable files. The managed password is stored in AWS Secrets Manager, which can have a small monthly cost.
 
+## ElastiCache Valkey
+
+The project includes a reusable Amazon ElastiCache Valkey module. Each environment places Valkey only in the private `data` subnet tier and allows port `6379` only from the private services security group.
+
+Valkey is the AWS-managed cache layer for application data that can be rebuilt, such as sessions, temporary lookup data, rate-limit counters, and expensive query results. Do not use it as the only source of truth for business data; keep durable records in a database such as PostgreSQL.
+
+Environment defaults:
+
+| Environment | Node type | Nodes | Automatic failover | Multi-AZ | Snapshots |
+| --- | --- | --- | --- | --- | --- |
+| `dev` | `cache.t4g.micro` | 1 | No | No | 1 day |
+| `staging` | `cache.t4g.small` | 1 | No | No | 3 days |
+| `prod` | `cache.t4g.medium` | 2 | Yes | Yes | 7 days |
+
+Valkey is configured with private endpoints, encryption at rest, in-transit encryption, and automatic minor version upgrades. No cache password is stored in Git. Access is restricted by subnet placement and security groups, so application workloads should connect from the services tier.
+
+The module creates:
+
+- An ElastiCache subnet group using the private data subnets.
+- A security group that accepts `6379/tcp` only from the services security group.
+- A Valkey replication group.
+- Outputs for the primary endpoint, reader endpoint, and port.
+
+After applying an environment, use these outputs for application configuration:
+
+```sh
+terraform output -raw valkey_primary_endpoint_address
+terraform output -raw valkey_port
+```
+
+For most application frameworks, configure the Redis-compatible client with:
+
+```text
+host: value from valkey_primary_endpoint_address
+port: value from valkey_port
+tls: enabled
+```
+
+Because in-transit encryption is enabled, clients must support TLS when connecting to Valkey. If a local library works against plain Redis on a laptop but fails in AWS, check that the client is using TLS for the ElastiCache endpoint.
+
 ## Dev Database Access
 
 Dev includes an optional private SSM helper instance for PostgreSQL port forwarding. It is enabled by `enable_database_access_host = true` in `environments/dev/terraform.tfvars`.
@@ -205,6 +247,8 @@ Terraform backend locking uses native S3 lock files with `use_lockfile = true`, 
 The scaffold does not create customer-managed KMS keys by default. Prefer no-extra-cost service-managed encryption options, such as SSE-S3 for S3, unless a workload has compliance or access-control requirements that justify customer-managed KMS keys and their fixed monthly cost.
 
 RDS cost is driven mainly by the DB instance class, storage size, backup retention, Multi-AZ, and optional observability features. Dev uses a small Single-AZ instance for cost control. Prod enables Multi-AZ and deletion protection for reliability.
+
+ElastiCache Valkey cost is driven mainly by node type, node count, snapshots, and data transfer. Dev uses a single small node for cost control. Prod uses two nodes with automatic failover and Multi-AZ for higher availability.
 
 Dev database access adds one private `t3.micro` EC2 instance and three SSM interface VPC endpoints. The helper uses standard CPU credits to avoid T-family unlimited credit surprises. This avoids a public bastion and keeps RDS private, but interface endpoints have hourly cost. Disable `enable_database_access_host` when the team does not need database access.
 

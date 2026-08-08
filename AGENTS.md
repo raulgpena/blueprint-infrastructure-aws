@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Session Name: blueprint-infrastructure-aws
+Session Name: blueprint-infrastructure-aws-session
 Goal: Design, review, and implement AWS infrastructure using Terraform while prioritizing security, simplicity, reliability, maintainability, and cost optimization.
 
 ## Session Purpose

@@ -1,0 +1,193 @@
+# name: Raul Pena (raul.pena@gmail.com)
+# createAt: 2026-08-08T12:21:43-0300
+# Description: GitHub Actions workflow for Terraform validation, planning, and controlled apply from the release/deploy branch.
+
+# Workflow name shown in the GitHub Actions UI.
+name: Terraform Deploy
+
+# Triggers are intentionally limited to the deployment branch and manual execution.
+on:
+  # A direct push to release/deploy or a merged pull request into release/deploy both create a push event.
+  push:
+    branches:
+      - release/deploy
+
+  # Manual runs allow an operator to choose the target environment and whether to plan or apply.
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target Terraform environment.
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      action:
+        description: Terraform action to run.
+        required: true
+        default: plan
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+
+# Permissions follow least privilege for GitHub Actions.
+permissions:
+  # Required so the workflow can checkout repository code.
+  contents: read
+  # Required for GitHub OIDC federation into AWS without long-lived access keys.
+  id-token: write
+
+# Concurrency prevents overlapping Terraform runs for the same branch/environment.
+concurrency:
+  group: terraform-${{ github.workflow }}-${{ github.event.inputs.environment || 'dev' }}-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  terraform:
+    # This guard makes re-run attempts stop immediately. GitHub still shows the re-run button,
+    # but Terraform steps execute only on the first run attempt.
+    if: github.run_attempt == 1
+
+    # The GitHub environment should be configured with required reviewers for protected targets.
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+
+    # Ubuntu runners have the broadest Terraform and AWS CLI support.
+    runs-on: ubuntu-latest
+
+    # Environment variables centralize paths and keep shell steps readable.
+    env:
+      TF_IN_AUTOMATION: true
+      TF_INPUT: false
+      TF_VERSION: 1.10.0
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      TARGET_ENVIRONMENT: ${{ github.event.inputs.environment || 'dev' }}
+      TERRAFORM_ACTION: ${{ github.event.inputs.action || 'plan' }}
+
+    steps:
+      # Checkout is required before Terraform can read modules and environment roots.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Resolve environment-specific paths and AWS role variables in one place.
+      - name: Resolve Terraform target
+        id: target
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Build paths from the selected environment.
+          ENVIRONMENT_DIR="environments/${TARGET_ENVIRONMENT}"
+          BACKEND_CONFIG="backend.local.hcl"
+          VAR_FILE="terraform.tfvars"
+
+          # Staging and prod currently provide backend examples, so require real files before use.
+          if [[ ! -d "${ENVIRONMENT_DIR}" ]]; then
+            echo "Environment directory does not exist: ${ENVIRONMENT_DIR}" >&2
+            exit 1
+          fi
+
+          if [[ ! -f "${ENVIRONMENT_DIR}/${BACKEND_CONFIG}" ]]; then
+            echo "Backend config file is required and was not found: ${ENVIRONMENT_DIR}/${BACKEND_CONFIG}" >&2
+            echo "Create this file from the environment backend example before running the workflow." >&2
+            exit 1
+          fi
+
+          if [[ ! -f "${ENVIRONMENT_DIR}/${VAR_FILE}" ]]; then
+            echo "Terraform variable file is required and was not found: ${ENVIRONMENT_DIR}/${VAR_FILE}" >&2
+            echo "Create this file with environment-specific values before running the workflow." >&2
+            exit 1
+          fi
+
+          # Resolve the AWS role from GitHub Actions variables without storing credentials in Git.
+          case "${TARGET_ENVIRONMENT}" in
+            dev)
+              AWS_ROLE_ARN="${{ vars.AWS_ROLE_ARN_DEV }}"
+              ;;
+            staging)
+              AWS_ROLE_ARN="${{ vars.AWS_ROLE_ARN_STAGING }}"
+              ;;
+            prod)
+              AWS_ROLE_ARN="${{ vars.AWS_ROLE_ARN_PROD }}"
+              ;;
+            *)
+              echo "Unsupported environment: ${TARGET_ENVIRONMENT}" >&2
+              exit 1
+              ;;
+          esac
+
+          if [[ -z "${AWS_REGION}" ]]; then
+            echo "GitHub variable AWS_REGION is required." >&2
+            exit 1
+          fi
+
+          if [[ -z "${AWS_ROLE_ARN}" ]]; then
+            echo "GitHub variable for the selected AWS role ARN is required." >&2
+            exit 1
+          fi
+
+          # Export resolved values as step outputs for later Terraform commands.
+          echo "environment_dir=${ENVIRONMENT_DIR}" >> "${GITHUB_OUTPUT}"
+          echo "backend_config=${BACKEND_CONFIG}" >> "${GITHUB_OUTPUT}"
+          echo "var_file=${VAR_FILE}" >> "${GITHUB_OUTPUT}"
+          echo "aws_role_arn=${AWS_ROLE_ARN}" >> "${GITHUB_OUTPUT}"
+          echo "plan_file=${TARGET_ENVIRONMENT}.tfplan" >> "${GITHUB_OUTPUT}"
+
+      # AWS credentials are obtained through GitHub OIDC and an AWS IAM role.
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ steps.target.outputs.aws_role_arn }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Terraform version is pinned to the minimum version supported by this project.
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      # Formatting runs across the repository because shared modules affect every environment.
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+
+      # Init uses the selected backend config, so the plan targets the intended remote state.
+      - name: Terraform init
+        run: terraform -chdir=${{ steps.target.outputs.environment_dir }} init -backend-config=${{ steps.target.outputs.backend_config }}
+
+      # Validate catches syntax, provider schema, and module wiring issues before planning.
+      - name: Terraform validate
+        run: terraform -chdir=${{ steps.target.outputs.environment_dir }} validate
+
+      # A normal plan is generated for plan and apply actions.
+      - name: Terraform plan
+        if: env.TERRAFORM_ACTION != 'destroy'
+        run: terraform -chdir=${{ steps.target.outputs.environment_dir }} plan -var-file=${{ steps.target.outputs.var_file }} -out=${{ steps.target.outputs.plan_file }}
+
+      # A destroy plan is generated only when a human manually selected action=destroy.
+      # Push-triggered runs default to plan and never reach this destructive path.
+      - name: Terraform destroy plan
+        if: env.TERRAFORM_ACTION == 'destroy'
+        run: terraform -chdir=${{ steps.target.outputs.environment_dir }} plan -destroy -var-file=${{ steps.target.outputs.var_file }} -out=${{ steps.target.outputs.plan_file }}
+
+      # Upload the binary plan for review or audit. Treat artifacts as sensitive because Terraform plans may contain infrastructure metadata.
+      - name: Upload Terraform plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-${{ env.TARGET_ENVIRONMENT }}-${{ github.run_id }}
+          path: ${{ steps.target.outputs.environment_dir }}/${{ steps.target.outputs.plan_file }}
+          retention-days: 7
+
+      # Apply only runs when a human manually selected action=apply.
+      # Push-triggered runs default to plan and never auto-apply.
+      - name: Terraform apply
+        if: env.TERRAFORM_ACTION == 'apply'
+        run: terraform -chdir=${{ steps.target.outputs.environment_dir }} apply -auto-approve ${{ steps.target.outputs.plan_file }}
+
+      # Destroy only runs when a human manually selected action=destroy.
+      # It applies the saved destroy plan from this same workflow run instead of running raw terraform destroy.
+      - name: Terraform destroy
+        if: env.TERRAFORM_ACTION == 'destroy'
+        run: terraform -chdir=${{ steps.target.outputs.environment_dir }} apply -auto-approve ${{ steps.target.outputs.plan_file }}

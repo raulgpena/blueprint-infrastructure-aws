@@ -15,12 +15,14 @@ Description: Summary of the current working session for the AWS Terraform infras
 - Added application connectivity documentation.
 - Added Mermaid and Draw.io infrastructure diagrams.
 - Created `docs/model` long-term documentation structure.
+- Added a GitHub Actions Terraform workflow for `release/deploy` branch planning and manual plan/apply/destroy execution.
 
 ## Current Status
 
 - Terraform formatting has passed in recent checks.
 - Environment initialization with `-backend=false` has succeeded.
 - Full Terraform validation is blocked by a local AWS provider plugin handshake issue.
+- CI/CD now has a workflow definition, but GitHub variables, environments, backend configs, and AWS OIDC roles must be configured before it can run successfully.
 - No AWS resources have been applied by this assistant in this session.
 
 ## Next Recommended Action

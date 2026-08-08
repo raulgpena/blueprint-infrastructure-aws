@@ -56,3 +56,42 @@ Valkey clients must use TLS because in-transit encryption is enabled.
 git diff --check
 xmllint --noout INFRASTRUCTURE_DIAGRAM.drawio
 ```
+
+## GitHub Actions Terraform Workflow
+
+The Terraform workflow is defined at `.github/workflows/terraform-deploy.yml`.
+
+Required GitHub repository or environment variables:
+
+- `AWS_REGION`
+- `AWS_ROLE_ARN_DEV`
+- `AWS_ROLE_ARN_STAGING`
+- `AWS_ROLE_ARN_PROD`
+
+Required GitHub environments:
+
+- `dev`
+- `staging`
+- `prod`
+
+The workflow runs automatically on pushes to `release/deploy`. A pull request merged into `release/deploy` also triggers the workflow because GitHub creates a push event for the merge commit.
+
+Manual runs use `workflow_dispatch` with:
+
+- `environment`: `dev`, `staging`, or `prod`
+- `action`: `plan`, `apply`, or `destroy`
+
+Re-run attempts do not execute Terraform because the job is guarded with `github.run_attempt == 1`.
+
+Destroy is manual-only. The workflow first creates a destroy plan with `terraform plan -destroy`, uploads the plan artifact, and then applies that saved destroy plan when `action=destroy`.
+
+Before using staging or prod in CI, create real backend config and variable files:
+
+```sh
+environments/staging/backend.local.hcl
+environments/staging/terraform.tfvars
+environments/prod/backend.local.hcl
+environments/prod/terraform.tfvars
+```
+
+Use GitHub environment protection rules to require reviewers for production applies.

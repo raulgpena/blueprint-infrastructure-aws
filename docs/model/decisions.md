@@ -19,6 +19,12 @@ Description: High-level architecture and infrastructure decisions for the AWS Te
 - Use ElastiCache Valkey for Redis-compatible cache workloads.
 - Use S3 for Maven and Helm artifact repositories only.
 - Defer npm and NuGet package repositories to AWS CodeArtifact.
+- Use GitHub Actions from the `release/deploy` branch for Terraform automation.
+- Use GitHub OIDC to assume AWS IAM roles instead of storing long-lived AWS access keys.
+- Automatically run Terraform plan on `release/deploy` pushes and merged pull requests.
+- Allow manual Terraform plan/apply/destroy through `workflow_dispatch`.
+- Require destroy to use a saved destroy plan generated in the same workflow run.
+- Block Terraform execution on workflow re-run attempts with `github.run_attempt == 1`.
 
 ## Decisions To Record As ADRs
 
@@ -28,3 +34,4 @@ Description: High-level architecture and infrastructure decisions for the AWS Te
 - SSM-based dev database access.
 - Valkey as the Redis-compatible cache engine.
 - S3 for Maven and Helm artifacts.
+- GitHub Actions Terraform deployment workflow and AWS OIDC role model.
